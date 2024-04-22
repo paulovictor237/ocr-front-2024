@@ -1,12 +1,11 @@
 import { useRef, useState } from 'react';
-import { GiArrowCursor } from 'react-icons/gi';
-import { IoMdDownload } from 'react-icons/io';
-import { TbRectangle } from 'react-icons/tb';
 import { Layer, Rect, Stage, Transformer } from 'react-konva';
 import { v4 as uuidv4 } from 'uuid';
 import { ACTIONS } from './constants';
 import { RectConfig } from 'konva/lib/shapes/Rect';
 import { KonvaEventObject } from 'konva/lib/Node';
+import { Menu } from '@/components/menu';
+import colors from 'tailwindcss/colors';
 
 // TODO: fazer o id ser o a chave do objeto
 
@@ -15,10 +14,9 @@ const SIZE = 500;
 export const Master = () => {
   const stageRef = useRef<any>();
   const [action, setAction] = useState(ACTIONS.SELECT);
-  const [fillColor, setFillColor] = useState('#ff0000');
   const [rectangles, setRectangles] = useState<RectConfig[]>([]);
+  const [strokeColor, setStrokeColor] = useState<string>(colors.green[500]);
 
-  const strokeColor = '#000';
   const isPaining = useRef<any>();
   const currentShapeId = useRef<any>();
   const transformerRef = useRef<any>();
@@ -37,7 +35,8 @@ export const Master = () => {
 
     setRectangles((rectangles) => [
       ...rectangles,
-      { id, x, y, height: 20, width: 20, fillColor },
+      // { id, x, y, height: 20, width: 20, fillColor },
+      { id, x, y, height: 20, width: 20 },
     ]);
   }
   function onPointerMove() {
@@ -58,16 +57,6 @@ export const Master = () => {
     isPaining.current = false;
   }
 
-  function handleExport() {
-    const uri = stageRef.current.toDataURL();
-    var link = document.createElement('a');
-    link.download = 'image.png';
-    link.href = uri;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
-
   function onClick(e: KonvaEventObject<MouseEvent>) {
     if (action !== ACTIONS.SELECT) return;
     const target = e.currentTarget;
@@ -75,67 +64,31 @@ export const Master = () => {
   }
 
   return (
-    <div className="relative justify-center flex w-full h-screen overflow-hidden bg-[#09090B]">
-      {/* Controls */}
-      <div className="absolute top-0 z-10 py-2 bg-white flex justify-center items-center gap-3 py-2 px-3 w-fit mx-auto border shadow-lg rounded-lg">
-        <button
-          className={
-            action === ACTIONS.SELECT
-              ? 'bg-violet-300 p-1 rounded'
-              : 'p-1 hover:bg-violet-100 rounded'
-          }
-          onClick={() => setAction(ACTIONS.SELECT)}
-        >
-          <GiArrowCursor size={'2rem'} />
-        </button>
-        <button
-          className={
-            action === ACTIONS.RECTANGLE
-              ? 'bg-violet-300 p-1 rounded'
-              : 'p-1 hover:bg-violet-100 rounded'
-          }
-          onClick={() => setAction(ACTIONS.RECTANGLE)}
-        >
-          <TbRectangle size={'2rem'} />
-        </button>
-
-        <button>
-          <input
-            className="w-6 h-6"
-            type="color"
-            value={fillColor}
-            onChange={(e) => setFillColor(e.target.value)}
-          />
-        </button>
-
-        <button onClick={handleExport}>
-          <IoMdDownload size={'1.5rem'} />
-        </button>
-      </div>
-      {/* Canvas */}
+    <div className="relative justify-center flex w-screen h-screen overflow-hidden bg-[#09090B]">
+      <Menu
+        action={action}
+        setAction={setAction}
+        stageRef={stageRef}
+        strokeColor={strokeColor}
+        setStrokeColor={setStrokeColor}
+      />
       <Stage
         ref={stageRef}
-        // width={window.innerWidth}
-        // height={window.innerHeight}
-        height={SIZE}
-        width={SIZE}
+        width={SIZE} // {window.innerWidth}
+        height={SIZE} //{window.innerHeight}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
-        // style={{ backgroundColor: 'black' }}
         className="border self-center"
       >
         <Layer>
           <Rect
+            id="bg"
             x={0}
             y={0}
             height={window.innerHeight}
             width={window.innerWidth}
-            fill="#ffffff"
-            id="bg"
-            onClick={() => {
-              transformerRef.current.nodes([]);
-            }}
+            onClick={() => transformerRef.current.nodes([])}
           />
 
           {rectangles.map((rectangle) => (
@@ -153,7 +106,11 @@ export const Master = () => {
             />
           ))}
 
-          <Transformer ref={transformerRef} />
+          <Transformer
+            ref={transformerRef}
+            flipEnabled={false}
+            rotateEnabled={false}
+          />
         </Layer>
       </Stage>
     </div>
